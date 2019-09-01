@@ -8,26 +8,42 @@ curses.curs_set(0)
 
 stdscr.refresh()
 
-stdscr.addstr(1, 0, "Press q to quit")
+stdscr.addstr(12, 0, "Press arrow keys to move, q to quit")
 
 x = 0
 y = 0
+height = 10
+width = 10
 
-while 1:
+while True:
     c = stdscr.getch()
 
-    stdscr.addstr(x, y, ' ')
-
+    xOld = x
+    yOld = y
+    move = False
+    
     if c == ord('q'):
         break  # Exit the while()
     elif c == 65:
-        stdscr.addstr(3, 0, 'Up')
-        y = y - 1
+        if y > 0:
+            y = y - 1
+            move = True
     elif c == 66:
-        stdscr.addstr(3, 0, 'Down')
-        y = y + 1
+        if y < height:
+            y = y + 1
+            move = True
+    elif c == 67:
+        if x < width:
+            x = x + 1
+            move = True
+    elif c == 68:
+        if x > 0:
+            x = x - 1
+            move = True
 
-    stdscr.addstr(x, y, '@')
+    if move:
+        stdscr.addstr(yOld, xOld, ' ')
+        stdscr.addstr(y, x, '@')
 
 curses.endwin()
 
