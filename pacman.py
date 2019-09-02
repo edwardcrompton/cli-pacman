@@ -2,8 +2,6 @@ import curses
 
 # Draw a class diagram to work out how to decouple the rendering and key input
 # from the rest of the game logic.
-#
-# At the moment 
 
 class UserInterface:
     def __init__(self, board, pacman):
@@ -66,8 +64,6 @@ class CursesRenderer:
             x = 0
             for square in row:
                 tile = chr(self.wall) if square else chr(self.food)
-                print(x)
-                print(y)
                 self.stdscr.addstr(y, x, tile)
                 x = x + 1
             y = y + 1
@@ -86,10 +82,13 @@ class CursesRenderer:
             self.pacman.y = posY
             self.pacman.x = posX
 
+        self.stdscr.addstr(13, 0, 'Score: ' + str(self.board.points))
+
 class Board:
     def __init__(self, filename):
         self.width = 28
         self.height = 11
+        self.points = 0
 
         self.layout = self.load(filename)
 
@@ -106,7 +105,10 @@ class Board:
         return layout
 
     def allowed(self, y, x):
-        if self.layout[y][x] == 0:
+        if self.layout[y][x] <= 0:
+            if (self.layout[y][x] == 0):
+                self.points = self.points + 100;
+            self.layout[y][x] = -1
             return True
         else:
             return False
