@@ -7,11 +7,14 @@ import curses
 
 class UserInterface:
     def __init__(self, board, pacman):
-        scr = curses.initscr()
+        self.scr = curses.initscr()
         self.pacman = pacman
         self.board = board
-        self.renderer = CursesRenderer(self.board, self.pacman, scr)
-        self.keyInput = Keys(scr)
+        self.renderer = CursesRenderer(self.board, self.pacman, self.scr)
+        self.up = 65
+        self.down = 66
+        self.left = 67
+        self.right = 68
 
     def setUp(self):
         self.renderer.setUp()
@@ -23,14 +26,18 @@ class UserInterface:
         self.renderer.move(y, x)
 
     def waitForKeyPress(self):
-        key = self.keyInput.waitForKeyPress()
-
-        if c == ord('q'):
-            pass
-        elif c == self.up:
-            self.move(-1, 0)
-        elif c == self.down:
-            self.move(1, 0)
+        while True:
+            c = self.scr.getch()
+            if c == ord('q'):
+                break
+            elif c == self.up:
+                self.move(-1, 0)
+            elif c == self.down:
+                self.move(1, 0)
+            elif c == self.left:
+                self.move(0, 1)
+            elif c == self.right:
+                self.move(0, -1)
 
 class CursesRenderer:
     def __init__(self, board, pacman, scr):
@@ -46,6 +53,7 @@ class CursesRenderer:
         curses.curs_set(0)
         self.stdscr.refresh()
         self.renderInstructions()
+        self.move(1, 1)
 
     def tearDown(self):
         curses.endwin()
@@ -71,9 +79,9 @@ class CursesRenderer:
         posY = self.pacman.y + y
         posX = self.pacman.x + x
 
-        if (posY > 0 and posY < board.height and posX > 0 and posX < board.width):
-            stdscr.addstr(self.pacman.y, self.pacman.x, ' ')
-            stdscr.addstr(posY, posX, '@')
+        if (posY >= 0 and posY < board.height and posX >= 0 and posX < board.width and board.allowed(posY, posX)):
+            self.stdscr.addstr(self.pacman.y, self.pacman.x, ' ')
+            self.stdscr.addstr(posY, posX, '@')
 
             self.pacman.y = posY
             self.pacman.x = posX
@@ -97,33 +105,25 @@ class Board:
             layout.append(line)
         return layout
 
+    def allowed(self, y, x):
+        if self.layout[y][x] == 0:
+            return True
+        else:
+            return False
+
 class Pacman:
     def __init__(self):
         self.x = 0
         self.y = 0
         self.char = chr(64)
 
-class Keys:
-    def __init__(self, scr):
-        self.up = 65
-        self.down = 66
-        self.left = 67
-        self.right = 68
-        self.stdscr = scr
-
-    def waitForKeyPress(self):
-        while True:
-            c = self.stdscr.getch()
-            if (c == self.up or c == self.down or c == self.left or c == self.right):
-                return c
-
 board = Board('board')
 pacman = Pacman()
 
 ui = UserInterface(board, pacman)
-ui.setUp()
 
+ui.setUp()
 ui.renderer.renderBoard()
-ui.keyInput.waitForKeyPress()
+ui.waitForKeyPress()
 ui.tearDown()
 
