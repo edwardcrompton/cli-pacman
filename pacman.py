@@ -1,4 +1,5 @@
 import curses
+import time
 
 # Draw a class diagram to work out how to decouple the rendering and key input
 # from the rest of the game logic.
@@ -23,19 +24,18 @@ class UserInterface:
     def move(self, y, x):
         self.renderer.move(y, x)
 
-    def waitForKeyPress(self):
-        while True:
-            c = self.scr.getch()
-            if c == ord('q'):
-                break
-            elif c == self.up:
-                self.move(-1, 0)
-            elif c == self.down:
-                self.move(1, 0)
-            elif c == self.left:
-                self.move(0, 1)
-            elif c == self.right:
-                self.move(0, -1)
+    def scanDirection(self):
+        c = self.scr.getch()
+        if c == self.up:
+            return (-1, 0)
+        elif c == self.down:
+            return (1, 0)
+        elif c == self.left:
+            return (0, 1)
+        elif c == self.right:
+            return (0, -1)
+        else:
+            return False
 
 class CursesRenderer:
     def __init__(self, board, pacman, scr):
@@ -51,6 +51,7 @@ class CursesRenderer:
         curses.curs_set(0)
         self.stdscr.refresh()
         self.renderInstructions()
+        self.stdscr.nodelay(1)
         self.move(1, 1)
 
     def tearDown(self):
@@ -58,7 +59,6 @@ class CursesRenderer:
 
     def renderBoard(self):
         layout = board.layout
-        print(layout)
         y = 0
         for row in layout:
             x = 0
@@ -118,6 +118,7 @@ class Pacman:
         self.x = 0
         self.y = 0
         self.char = chr(64)
+        self.direction = (0, -1)
 
 board = Board('board')
 pacman = Pacman()
@@ -126,6 +127,14 @@ ui = UserInterface(board, pacman)
 
 ui.setUp()
 ui.renderer.renderBoard()
-ui.waitForKeyPress()
+
+while True:
+    time.sleep(250 / 1000)    
+    direction = ui.scanDirection()
+    if direction:
+        pacman.direction = direction
+
+    ui.move(*pacman.direction)
+
 ui.tearDown()
 
