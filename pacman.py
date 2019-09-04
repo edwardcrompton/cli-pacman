@@ -5,8 +5,8 @@ import time
 # from the rest of the game logic.
 
 class UserInterface:
-    def __init__(self, board, pacman):
-        self.scr = curses.initscr()
+    def __init__(self, board, pacman, scr):
+        self.scr = scr
         self.pacman = pacman
         self.board = board
         self.renderer = CursesRenderer(self.board, self.pacman, self.scr)
@@ -25,7 +25,7 @@ class UserInterface:
         self.renderer.move(y, x)
 
     def scanDirection(self):
-        c = self.scr.getch()
+        c = self.scr.getkey()
         if c == self.up:
             return (-1, 0)
         elif c == self.down:
@@ -43,46 +43,44 @@ class CursesRenderer:
         self.pacman = pacman
         self.wall = 9617
         self.food = 183
-        self.stdscr = curses.initscr()
+        self.scr = scr
 
     def setUp(self):
-        curses.noecho()
-        curses.cbreak()
-        curses.curs_set(0)
-        self.stdscr.refresh()
+        self.scr.nodelay(True)
+        self.scr.clear()
+
         self.renderInstructions()
-        self.stdscr.nodelay(1)
         self.move(1, 1)
 
     def tearDown(self):
         curses.endwin()
 
     def renderBoard(self):
-        layout = board.layout
+        layout = self.board.layout
         y = 0
         for row in layout:
             x = 0
             for square in row:
                 tile = chr(self.wall) if square else chr(self.food)
-                self.stdscr.addstr(y, x, tile)
+                self.scr.addstr(y, x, tile)
                 x = x + 1
             y = y + 1
 
     def renderInstructions(self):
-        self.stdscr.addstr(12, 0, 'Use arrow keys to move. Press q to quit.')
+        self.scr.addstr(12, 0, 'Use arrow keys to move. Press q to quit.')
 
     def move(self, y, x):
         posY = self.pacman.y + y
         posX = self.pacman.x + x
 
-        if (posY >= 0 and posY < board.height and posX >= 0 and posX < board.width and board.allowed(posY, posX)):
-            self.stdscr.addstr(self.pacman.y, self.pacman.x, ' ')
-            self.stdscr.addstr(posY, posX, '@')
+        if (posY >= 0 and posY < self.board.height and posX >= 0 and posX < self.board.width and self.board.allowed(posY, posX)):
+            self.scr.addstr(self.pacman.y, self.pacman.x, ' ')
+            self.scr.addstr(posY, posX, '@')
 
             self.pacman.y = posY
             self.pacman.x = posX
 
-        self.stdscr.addstr(13, 0, 'Score: ' + str(self.board.points))
+        self.scr.addstr(13, 0, 'Score: ' + str(self.board.points))
 
 class Board:
     def __init__(self, filename):
@@ -120,21 +118,36 @@ class Pacman:
         self.char = chr(64)
         self.direction = (0, -1)
 
-board = Board('board')
-pacman = Pacman()
+def main(scr):
+    board = Board('board')
+    pacman = Pacman()
 
-ui = UserInterface(board, pacman)
+    ui = UserInterface(board, pacman, scr)
 
-ui.setUp()
-ui.renderer.renderBoard()
+    ui.setUp()
+    ui.renderer.renderBoard()
 
-while True:
-    time.sleep(250 / 1000)    
-    direction = ui.scanDirection()
-    if direction:
-        pacman.direction = direction
+    key=""
+    incrementor = 0
+    fps = 10
+    lastFrameTime = time.time()
 
-    ui.move(*pacman.direction)
+    while True:
+        try:
+            direction = ui.scanDirection()
+            if direction:
+                pacman.direction = direction
 
-ui.tearDown()
+            ui.renderer.stdscr.addstr(14, 1, str(direction))
+        except Exception as e:
+            # No input
+            pass
+
+        currentTime = time.time()
+        delta = currentTime - lastFrameTime
+        if delta >= 1/fps:
+            lastFrameTime = currentTime
+            ui.move(*pacman.direction)
+
+curses.wrapper(main)
 
