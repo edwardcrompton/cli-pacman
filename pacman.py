@@ -10,10 +10,10 @@ class UserInterface:
         self.pacman = pacman
         self.board = board
         self.renderer = CursesRenderer(self.board, self.pacman, self.scr)
-        self.up = 65
-        self.down = 66
-        self.left = 67
-        self.right = 68
+        self.up = 'KEY_UP'
+        self.down = 'KEY_DOWN'
+        self.left = 'KEY_LEFT'
+        self.right = 'KEY_RIGHT'
 
     def setUp(self):
         self.renderer.setUp()
@@ -26,6 +26,9 @@ class UserInterface:
 
     def scanDirection(self):
         c = self.scr.getkey()
+        self.scr.addstr(15, 0, '                    ')
+        self.scr.addstr(15, 0, c)
+
         if c == self.up:
             return (-1, 0)
         elif c == self.down:
@@ -127,8 +130,6 @@ def main(scr):
     ui.setUp()
     ui.renderer.renderBoard()
 
-    key=""
-    incrementor = 0
     fps = 10
     lastFrameTime = time.time()
 
@@ -138,16 +139,16 @@ def main(scr):
             if direction:
                 pacman.direction = direction
 
-            ui.renderer.stdscr.addstr(14, 1, str(direction))
+            ui.renderer.scr.addstr(14, 1, str(direction))
         except Exception as e:
             # No input
             pass
 
-        currentTime = time.time()
-        delta = currentTime - lastFrameTime
-        if delta >= 1/fps:
-            lastFrameTime = currentTime
-            ui.move(*pacman.direction)
+#        currentTime = time.time()
+#        delta = currentTime - lastFrameTime
+#        if delta >= 1/fps:
+#            lastFrameTime = currentTime
+#            ui.move(*pacman.direction)
 
 curses.wrapper(main)
 
