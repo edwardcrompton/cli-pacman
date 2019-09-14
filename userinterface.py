@@ -22,7 +22,7 @@ class CursesUserInterface:
     def move(self, y, x):
         self.renderer.move(y, x)
 
-    def scanDirection(self):
+    def scanKey(self):
         c = self.scr.getkey()
 
         if c == self.up:
@@ -33,13 +33,7 @@ class CursesUserInterface:
             return (0, -1)
         elif c == self.right:
             return (0, 1)
-        else:
-            return False
-
-    def scanOption(self):
-        c = self.scr.getKey()
-        
-        if c == self.quit:
+        elif c == self.quit:
             return 'QUIT'
         else:
             return False
@@ -106,21 +100,15 @@ class Game:
 
         while True:
             try:
-                direction = ui.scanDirection()
-                if direction:
-                    self.pacman.direction = direction
+                key = ui.scanKey()
+                if type(key) == tuple:
+                    self.pacman.direction = key
+                elif key == 'QUIT':
+                    break
 
-                ui.renderer.scr.addstr(14, 1, str(direction))
+                ui.renderer.scr.addstr(14, 1, str(key))
             except Exception as e:
                 # No input
-                pass
-
-            try:
-                option = ui.scanOption()
-                if option == 'QUIT':
-                    break
-            except Exception as e:
-                #No input
                 pass
 
             currentTime = time.time()
